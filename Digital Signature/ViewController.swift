@@ -17,6 +17,10 @@ func dialogError(question: String, text: String) {
     alert.runModal()
 }
 
+func isPrime(_ number: Int) -> Bool {
+    return number > 1 && !(2..<number).contains { number % $0 == 0 }
+}
+
 func dialogOK(question: String, text: String) {
     let alert = NSAlert()
     alert.messageText = question
@@ -98,7 +102,7 @@ class ViewController: NSViewController {
         return x
     }
     
-    var russianAlphabet = [0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xA8, 0xC6, 0xC7, 0xC8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf]
+     var russianAlphabet = [0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xA8, 0xC6, 0xC7, 0xC8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf]
     //["А", "Б", "В", "Г", "Д", "Е", "Ё", "Ж", "З", "И", "Й", "К", "Л", "М", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ы", "Ь", "Э", "Ю", "Я"]
     
     func indexOfAlphabet(forCharacter character: UInt8) -> Int {
@@ -114,27 +118,36 @@ class ViewController: NSViewController {
     func GetHash() -> Int {
         var h = 100
         for index in 0..<msg_bytes.count {
-            h = ((h + indexOfAlphabet(forCharacter: msg_bytes[index])) * (h + indexOfAlphabet(forCharacter: msg_bytes[index]))) % n
+            // h = ((h + indexOfAlphabet(forCharacter: msg_bytes[index])) * (h + indexOfAlphabet(forCharacter: msg_bytes[index]))) % n
+            h = (h + Int(msg_bytes[index])) * (h + Int(msg_bytes[index])) % n
             print(h)
         }
         return h
     }
     
     @IBAction func CreateSignature(_ sender: Any) {
-        guard msg_bytes.count > 0 else {
-            dialogError(question: "Error!", text: "Please, open a file.")
-            return
-        }
+//        guard msg_bytes.count > 0 else {
+//            dialogError(question: "Error!", text: "Please, open a file.")
+//            return
+//        }
         guard Int(p_textfield.stringValue) != nil else {
             dialogError(question: "Error!", text: "Please, specify p.")
             return
         }
         p = Int(p_textfield.stringValue)!
+        guard isPrime(p) else {
+            dialogError(question: "Error!", text: "P is not prime.")
+            return
+        }
         guard Int(q_textfield.stringValue) != nil else {
             dialogError(question: "Error!", text: "Please, specify q.")
             return
         }
         q = Int(q_textfield.stringValue)!
+        guard isPrime(q) else {
+            dialogError(question: "Error!", text: "Q is not prime.")
+            return
+        }
         guard Int(d_textfield.stringValue) != nil else {
             dialogError(question: "Error!", text: "Please, specify d.")
             return
@@ -142,7 +155,19 @@ class ViewController: NSViewController {
         d = Int(d_textfield.stringValue)!
         
         n = p * q
+//        guard n > 255 else {
+//            dialogError(question: "Error!", text: "p * q should be greater then 255.")
+//            return
+//        }
         let euler = (p - 1) * (q - 1)
+        
+        for index in 2...euler {
+            if d % index == 0 && euler % index == 0 {
+                dialogError(question: "Error!", text: "D isn't correct!")
+                return
+            }
+        }
+        
         let e = inverse(n: d, modulus: euler)
         e_textfield.stringValue = "\(e)"
 
@@ -158,10 +183,10 @@ class ViewController: NSViewController {
             dialogError(question: "Error!", text: "Please, specify signature file.")
             return
         }
-        guard msg_bytes.count > 0 else {
-            dialogError(question: "Error!", text: "Please, open a file.")
-            return
-        }
+//        guard msg_bytes.count > 0 else {
+//            dialogError(question: "Error!", text: "Please, open a file.")
+//            return
+//        }
         guard Int(p_textfield.stringValue) != nil else {
             dialogError(question: "Error!", text: "Please, specify p.")
             return
