@@ -17,6 +17,19 @@ func dialogError(question: String, text: String) {
     alert.runModal()
 }
 
+func gcd(_ m: Int, _ n: Int) -> Int {
+    var a = 0
+    var b = max(m, n)
+    var r = min(m, n)
+    
+    while r != 0 {
+        a = b
+        b = r
+        r = a % b
+    }
+    return b
+}
+
 func isPrime(_ number: Int) -> Bool {
     return number > 1 && !(2..<number).contains { number % $0 == 0 }
 }
@@ -155,18 +168,25 @@ class ViewController: NSViewController {
         d = Int(d_textfield.stringValue)!
         
         n = p * q
+        
 //        guard n > 255 else {
 //            dialogError(question: "Error!", text: "p * q should be greater then 255.")
 //            return
 //        }
+        
         let euler = (p - 1) * (q - 1)
         
-        for index in 2...euler {
-            if d % index == 0 && euler % index == 0 {
-                dialogError(question: "Error!", text: "D isn't correct!")
-                return
-            }
+        guard gcd(euler, d) == 1 else {
+            dialogError(question: "Error!", text: "D isn't correct!")
+            return
         }
+        
+//        for index in 2...euler {
+//            if d % index == 0 && euler % index == 0 {
+//                dialogError(question: "Error!", text: "D isn't correct!")
+//                return
+//            }
+//        }
         
         let e = inverse(n: d, modulus: euler)
         e_textfield.stringValue = "\(e)"
@@ -210,6 +230,7 @@ class ViewController: NSViewController {
         msg_hash = GetHash()
         hash_field.stringValue = String(msg_hash)
         signature = fast_exp(a: msg_hash, z: d, n: n)
+        
         if (signature != Int(signature_textfield.stringValue)) {
             dialogError(question: "Error!", text: "Incorrect digital signature!")
         } else {
